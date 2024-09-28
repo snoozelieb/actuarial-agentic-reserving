@@ -5,3 +5,5 @@ matplotlib
 seaborn
 scipy
 crewai
+black
+pytest
