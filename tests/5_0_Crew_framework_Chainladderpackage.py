@@ -10,6 +10,14 @@ Cache:          I also add cache functionality which was recommended by the crew
 Context:        I also add the context variable to the tasks to allow for the agents to have a better understanding of the task at hand. #https://docs.crewai.com/core-concepts/Tasks/#task-attributes
 
 Creating your own tool:         https://docs.crewai.com/core-concepts/Tools/#creating-your-own-tools
+
+Chain ladder package:           Inputs hould be data frames https://chainladder-python.readthedocs.io/en/latest/user_guide/triangle.html https://chainladder-python.readthedocs.io/en/latest/getting_started/tutorials/triangle-tutorial.html   
+                                Data input should be a data frame end up with three columns: origin, development, values. 
+                                    Origin and development should be datetime objects. 
+                                    Origin should be the accident year I believe. Development year is the year that the payment is paid out.
+                                    Values should be the amount of the claim. (paid, incurred)
+
+
 """
 
 
@@ -48,6 +56,77 @@ os.environ["OPENAI_API_KEY"] = "api key here"
 os.environ["OPENAI_MODEL_NAME"]= "gpt-4o"
 
 #############################################################################################################################################################################################################
+
+import chainladder as cl
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load sample data with corrected development periods
+#Below is the format of the dataframe that is needed for the chainladder package
+data = pd.DataFrame({
+    'origin': [2015, 2015, 2015, 2016, 2016, 2016, 2017, 2017, 2017],
+    'development': ['2015-12-31', '2016-12-31', '2017-12-31',
+                    '2016-12-31', '2017-12-31', '2018-12-31',
+                    '2017-12-31', '2018-12-31', '2019-12-31'],
+    'values': [100, 150, 175, 110, 170, 200, 120, 180, 210]
+})
+"""
+  Data input should be a data frame end up with three columns: origin, development, values. 
+                                    Origin and development should be datetime objects. 
+                                    Origin should be the accident year I believe. Development year is the year that the payment is paid out.
+                                    Values should be the amount of the claim. (paid, incurred)
+"""
+
+
+# Convert 'origin' and 'development' to datetime
+data['origin'] = pd.to_datetime(data['origin'].astype(str) + '-01-01')
+data['development'] = pd.to_datetime(data['development'])
+
+# Create a triangle from the raw data
+triangle = cl.Triangle(data, origin='origin', development='development', columns=['values'],cumulative=False)
+
+#Discplay the link-ratios
+print(triangle.link_ratio)
+
+#Vewing the latest diagonal
+print(triangle.latest_diagonal)
+
+# Display the triangle
+print("Run-off Triangle:")
+print(triangle)
+
+# Apply the chain ladder method
+cl_model = cl.Chainladder().fit(triangle)
+
+# Calculate Ultimate and Reserves
+ultimate = cl_model.ultimate_
+reserves = cl_model.full_expectation_ - triangle
+
+# Display results
+print("\nUltimate:")
+print(ultimate)
+
+print("\nReserves:")
+print(reserves)
+
+# Visualize the results
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+
+# Plot the original triangle
+triangle.plot(ax=ax1, title='Original Triangle')
+
+# Plot the completed triangle
+
+#understanding granularity
+print("origin grain:", triangle.origin_grain) #Y = yearly, M = monthly, Q = quarterly
+print("development grain:", triangle.development_grain) 
+
+
+plt.tight_layout()
+plt.show()
+
+
 ###################################################################################################################################################################################################
 """
 Non-crewai functions
@@ -189,10 +268,10 @@ crew = Crew(
 )
 
 # Execute the analysis
-result = crew.kickoff()
+#result = crew.kickoff()
 
 #Addtional functionality to export results to a text file and word document 
 print("Results exported successfully!")
 
 print("######################")
-print(result)
+#print(result)
