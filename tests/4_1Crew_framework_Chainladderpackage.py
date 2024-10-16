@@ -44,7 +44,7 @@ from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
 
 #https://www.youtube.com/watch?v=q6QLGS306d0&ab_channel=TylerAI Crew ai tutorial that the code is based on
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "api key here"
 os.environ["OPENAI_MODEL_NAME"]= "gpt-4o"
 
 #############################################################################################################################################################################################################
